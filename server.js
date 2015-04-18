@@ -57,18 +57,16 @@ app.get('/sample_route', function(req, res){
 
 app.get('/signin', function(req, res){
   fitbitClient.getAccessToken(req, res, function (error, newToken) {
-    console.log('In /signin callback');
     if(newToken) {
       token = newToken;
       res.writeHead(200, {'Content-Type':'text/html'});
-      res.end('<html>Now <a href="/getStuff">get stuff</a></html>');
+      res.end('<html>Now <a href="/getprofile">get stuff</a><br><a href="/getactivities">ACTIVITIES</a></html>');
     }
-    //console.log('SUCCESS!!!!');
   });
   console.log("Here");
 });
 
-app.get('/getStuff', function (req, res) {
+app.get('/getprofile', function (req, res) {
   fitbitClient.apiCall('GET', '/user/-/profile.json',
     {token: {oauth_token_secret: token.oauth_token_secret,
              oauth_token: token.oauth_token}},
@@ -76,6 +74,16 @@ app.get('/getStuff', function (req, res) {
       if (err) return res.send(err, 500);
       res.json(json);
   });
+});
+
+app.get('/getactivities', function(req, res){
+  fitbitClient.apiCall('GET', '/user/-/activities/date/2015-04-16.json',
+    {token: {oauth_token_secret: token.oauth_token_secret,
+           oauth_token: token.oauth_token}},
+    function(err, resp, json) {
+      if(err) return res.send(err, 500);
+      res.json(json);
+    });
 });
 
 /*app.get('/oauth/redirect', OAuth.redirect(function(result, req, res) {
