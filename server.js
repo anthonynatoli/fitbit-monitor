@@ -3,21 +3,28 @@ var http = require('http');
 var exhbs = require( 'express3-handlebars' );
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+var session = require('express-session');
 
 var router = require('./routes/router');
 //var OAuth = require('oauthio');
 
 var PORT = process.env.PORT || 3000; //for localhost testing
-var URI = 'http://localhost:' + PORT + '/signin';
+var callback_URI = 'http://localhost:' + PORT + '/signin';
 if( process.env.PORT ){
   URI = 'http://fitbitmonitor.herokuapp.com';
 }
 
 var client_key = '943e4f12e00b951032e553e41978aedc';
 var client_secret = 'ee62b24ff77d33b05ae2b8abc7c268f6';
-var fitbitClient = require('fitbit-js')(client_key, client_secret, URI, 'en_US');
+var fitbitClient = require('fitbit-js')(client_key, client_secret, callback_URI, 'en_US');
 
 var app = express();
+app.use(session({
+  resave: false,
+  saveUninitialized: false,
+  secret: 'supersecret',
+  token: {}
+}));
 
 var server = http.createServer(app);
 
@@ -42,7 +49,7 @@ app.use(function(req, res, next) {
   next();
 });
 */
-var token;
+var auth_token;
 
 app.use('/router', router);	//use router for all routes under /router/*
 
@@ -58,18 +65,27 @@ app.get('/sample_route', function(req, res){
 app.get('/signin', function(req, res){
   fitbitClient.getAccessToken(req, res, function (error, newToken) {
     if(newToken) {
-      token = newToken;
-      res.writeHead(200, {'Content-Type':'text/html'});
-      res.end('<html>Now <a href="/getprofile">get stuff</a><br><a href="/getactivities">ACTIVITIES</a></html>');
+      auth_token = newToken;
+      //res.writeHead(200, {'Content-Type':'text/html'});
+      //res.end('<html>Now <a href="/getprofile">get stuff</a><br><a href="/getactivities">ACTIVITIES</a></html>');
+      res.render('retreivers');
     }
   });
-  console.log("Here");
+});
+
+app.get('/token', function(req, res){
+  console.log('Token:' + JSON.stringify(auth_token));
+  auth_token = {token: {oauth_token_secret: auth_token.oauth_token_secret,
+           oauth_token: auth_token.oauth_token}};
+  req.session.token = auth_token;
 });
 
 app.get('/getprofile', function (req, res) {
-  fitbitClient.apiCall('GET', '/user/-/profile.json',
-    {token: {oauth_token_secret: token.oauth_token_secret,
-             oauth_token: token.oauth_token}},
+  console.log("Get Profile, token: " + JSON.stringify(req.session.token));
+
+  fitbitClient.apiCall('GET', '/user/-/profile.json', req.session.token,
+    //{token: {oauth_token_secret: token.oauth_token_secret,
+    //         oauth_token: token.oauth_token}},
     function(err, resp, json) {
       if (err) return res.send(err, 500);
       res.json(json);
@@ -77,9 +93,11 @@ app.get('/getprofile', function (req, res) {
 });
 
 app.get('/getactivities', function(req, res){
-  fitbitClient.apiCall('GET', '/user/-/activities/date/2015-04-16.json',
-    {token: {oauth_token_secret: token.oauth_token_secret,
-           oauth_token: token.oauth_token}},
+  console.log("Get Activities, token: " + JSON.stringify(auth_token));
+  fitbitClient.apiCall('GET', '/user/-/activities/date/2015-04-18.json',
+      auth_token,
+    //{token: {oauth_token_secret: token.oauth_token_secret,
+    //       oauth_token: token.oauth_token}},
     function(err, resp, json) {
       if(err) return res.send(err, 500);
       res.json(json);
