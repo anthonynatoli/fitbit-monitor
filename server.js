@@ -8,7 +8,7 @@ var router = require('./routes/router');
 //var OAuth = require('oauthio');
 
 var PORT = process.env.PORT || 3000; //for localhost testing
-var URI = 'http://localhost:' + PORT;
+var URI = 'http://localhost:' + PORT + '/signin';
 if( process.env.PORT ){
   URI = 'http://fitbitmonitor.herokuapp.com';
 }
@@ -47,16 +47,7 @@ var token;
 app.use('/router', router);	//use router for all routes under /router/*
 
 app.get('/', function(req, res){
-  //res.render( 'home' ); 		//renders the views/home.handlebars view
-  fitbitClient.getAccessToken(req, res, function (error, newToken) {
-    console.log('In callback');
-    if(newToken) {
-      token = newToken;
-      res.writeHead(200, {'Content-Type':'text/html'});
-      res.end('<html>Now <a href="/getStuff">get stuff</a></html>');
-    }
-    //console.log('SUCCESS!!!!');
-  });
+  res.render( 'home' ); 		//renders the views/home.handlebars view
 });
 
 app.get('/sample_route', function(req, res){
@@ -66,11 +57,11 @@ app.get('/sample_route', function(req, res){
 
 app.get('/signin', function(req, res){
   fitbitClient.getAccessToken(req, res, function (error, newToken) {
-    console.log('In callback');
+    console.log('In /signin callback');
     if(newToken) {
       token = newToken;
       res.writeHead(200, {'Content-Type':'text/html'});
-      //res.send('<html>Now <a href="/getStuff">get stuff</a></html>');
+      res.end('<html>Now <a href="/getStuff">get stuff</a></html>');
     }
     //console.log('SUCCESS!!!!');
   });
