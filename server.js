@@ -32,7 +32,7 @@ var server = http.createServer(app);
 app.engine( 'handlebars', exhbs( { defaultLayout: 'master' } ) );
 app.set( 'view engine', 'handlebars' );
 
-app.use( express.static( __dirname ) );
+app.use( express.static( __dirname + '/public') );
 
 app.use(cookieParser());
 app.use(bodyParser.json());
