@@ -32,7 +32,7 @@ var server = http.createServer(app);
 app.engine( 'handlebars', exhbs( { defaultLayout: 'master' } ) );
 app.set( 'view engine', 'handlebars' );
 
-app.use( express.static( __dirname + '/public') );
+app.use( express.static( __dirname ) );
 
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -78,7 +78,7 @@ function saveToken(req, res){
   app.locals.auth_token = {token: {oauth_token_secret: auth_token.oauth_token_secret,
            oauth_token: auth_token.oauth_token}};
   req.session.token = app.locals.auth_token;
-  console.log('Session token: ' + JSON.stringifyreq.session.token));
+  console.log('Session token: ' + JSON.stringify(req.session.token));
 }
 
 app.get('/getprofile', getProfile);
